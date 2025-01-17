@@ -10,11 +10,11 @@ let bpm = 120;
 
 /**
  * Collection of state
- * - 0: X
- * - 1: Y
- * - 2: Fill 1
- * - 3: Fill 2
- * - 4: Fill 3
+ * - 0: Fill 1
+ * - 1: Fill 2
+ * - 2: Fill 3
+ * - 3: X
+ * - 4: Y
  */
 let cv = [0, 0, 0, 0, 0];
 
