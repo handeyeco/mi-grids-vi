@@ -1,19 +1,51 @@
-var sound = new Howl({
-  src: ['TR808.sprite.mp3', 'TR808.sprite.wav'],
-  sprite: {
-    BD: [0, 1500],
-    BDA: [2000, 1500],
-    SD: [4000, 500],
-    SDA: [5000, 500],
-    HH: [6000, 300],
-    HHA: [7000, 500]
+// ===============
+// MAIN GRIDS CODE
+// ===============
+
+// global state
+let mixed;
+let step = 0;
+let run = false;
+let bpm = 120;
+
+/**
+ * Collection of state
+ * - 0: X
+ * - 1: Y
+ * - 2: Fill 1
+ * - 3: Fill 2
+ * - 4: Fill 3
+ */
+let cv = [0, 0, 0, 0, 0];
+
+function U8Mix(a, b, x) {
+  return x * b + (0xFF - x) * a >> 8;
+}
+
+function calculateMixed() {
+  const xpage = cv[3] >> 6;
+  const xbalance = (cv[3] << 2) & 0xFF;
+  const ypage = cv[4] >> 6;
+  const ybalance = (cv[4] << 2) & 0xFF;
+
+  mixed = [];
+  for (i = 0; i < 96; i++) {
+    const a = drum_map[(xpage + 0) * 5 + ypage + 0][i];
+    const b = drum_map[(xpage + 1) * 5 + ypage + 0][i];
+    const c = drum_map[(xpage + 0) * 5 + ypage + 1][i];
+    const d = drum_map[(xpage + 1) * 5 + ypage + 1][i];
+    mixed[i] = U8Mix(U8Mix(a, b, xbalance), U8Mix(c, d, xbalance), ybalance);
   }
-});
 
-var cv = [0, 0, 0, 0, 0];
-var searchParams = new URLSearchParams(location.search);
-var mixed;
+  return {xpage, xbalance, ypage, ybalance}
+}
 
+// ==================
+// URL PARAM HANDLING
+// ==================
+
+// get settings from URL
+const searchParams = new URLSearchParams(location.search);
 if (incv = searchParams.get("cv")) {
   incv = incv.split(",");
   if (incv.length == 5) {
@@ -24,55 +56,38 @@ if (incv = searchParams.get("cv")) {
     }
   }
 }
-var svg = d3.select("svg");
-var color = d3.scaleLinear().domain([0, 0xFF]).range(['white', 'blue']);
-var step = 0, run = false, bpm = 120;
 
-// javascripts ~ op gives the 1's compliment for some reason
-// so we xor the cv value with 0xFF for both inversions instead
-function stroke(d, i) {
-  return (d > (0xFF ^ cv[Math.floor(i / 32)])) ? 'black' : 'lightgray';
-}
+// ================
+// D3 / VIZ DRAWING
+// ================
 
-function strokewidth(d, i) {
-  return (d > 192 && d > (0xFF ^ cv[Math.floor(i / 32)])) ? 3 : 1;
-}
+const svg = d3.select("svg");
+const color = d3.scaleLinear().domain([0, 0xFF]).range(['white', 'blue']);
 
 function fill(d, i) {
   return run && step == (i % 32) && (d > (0xFF ^ cv[Math.floor(i / 32)])) ?
     'orange' : color(d);
-
-}
-
-function U8Mix(a, b, x) {
-  return x * b + (0xFF - x) * a >> 8;
 }
 
 function update() {
-  var xpage = cv[3] >> 6;
-  var xbalance = (cv[3] << 2) & 0xFF;
-  var ypage = cv[4] >> 6;
-  var ybalance = (cv[4] << 2) & 0xFF;
+  const {xpage, xbalance, ypage, ybalance} = calculateMixed()
 
   d3.select("#coordinates").text(xpage + ":" + xbalance + "," + ypage + ":" + ybalance);
 
-  mixed = [];
-  for (i = 0; i < 96; i++) {
-    var a = drum_map[(xpage + 0) * 5 + ypage + 0][i];
-    var b = drum_map[(xpage + 1) * 5 + ypage + 0][i];
-    var c = drum_map[(xpage + 0) * 5 + ypage + 1][i];
-    var d = drum_map[(xpage + 1) * 5 + ypage + 1][i];
-    mixed[i] = U8Mix(U8Mix(a, b, xbalance), U8Mix(c, d, xbalance), ybalance);
-  }
-
   svg.selectAll('.cell').data(mixed);
   svg.selectAll('.cell')
-    .style('stroke', stroke)
-    .style('stroke-width', strokewidth)
+    .style('stroke', function (d, i) {
+      // javascripts ~ op gives the 1's compliment for some reason
+      // so we xor the cv value with 0xFF for both inversions instead
+      return (d > (0xFF ^ cv[Math.floor(i / 32)])) ? 'black' : 'lightgray';
+    })
+    .style('stroke-width', function (d, i) {
+      return (d > 192 && d > (0xFF ^ cv[Math.floor(i / 32)])) ? 3 : 1;
+    })
     .style('fill', color);
 
-  var url = new URL(location.href);
-  var permalink = url.origin + url.pathname + "?cv=" + cv.join(",");
+  const url = new URL(location.href);
+  const permalink = url.origin + url.pathname + "?cv=" + cv.join(",");
   d3.select("#permalink").attr('href', permalink);
 }
 
@@ -95,6 +110,10 @@ svg.append("g").attr('transform', 'translate(10,30)').selectAll('.cell')
 
 update();
 
+// ====================
+// INTERACTION HANDLERS
+// ====================
+
 d3.selectAll('.cv').on('input', function () {
   key = +d3.select(this).attr("data-key");
   cv[key] = +this.value;
@@ -102,9 +121,28 @@ d3.selectAll('.cv').on('input', function () {
   update();
 });
 
-
 d3.select('#run').on('click', function () { run = !run; step = 0; tick(); });
 d3.select('#bpm').on('input', function () { bpm = +this.value; d3.select('#value-bpm').text(this.value); });
+
+// ============
+// AUDIO PLAYER
+// ============
+
+const sound = new Howl({
+  src: ['TR808.sprite.mp3', 'TR808.sprite.wav'],
+  sprite: {
+    BD: [0, 1500],
+    BDA: [2000, 1500],
+    SD: [4000, 500],
+    SDA: [5000, 500],
+    HH: [6000, 300],
+    HHA: [7000, 500]
+  }
+});
+
+// ===========
+// UPDATE LOOP
+// ===========
 
 function tick() {
   d3.selectAll('.cell').style('fill', fill);
