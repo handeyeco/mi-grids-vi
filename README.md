@@ -1,6 +1,7 @@
 This is a modification of the Mutable Instruments Grids Drum Fill Visualisation by devdsp.
 
 [Original article](https://devdsp.com/grids.html)
+
 [Grids firmware](https://github.com/pichenettes/eurorack/tree/master/grids)
 
 Original copyrights:
