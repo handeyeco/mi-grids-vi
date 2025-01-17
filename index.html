@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<!--
+Copyright 2017 Adam Thomas.
+Copyright 2012 Olivier Gillet.
+
+
+Author: 
+  * Adam Thomas (adam.lloyd@gmail.com) - D3 visualisation,
+  * Olivier Gillet (olivier@mutable-instruments.net) - Grids firmware 
+
+Original Source:
+  https://github.com/pichenettes/eurorack/tree/master/grids
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<head>
+	<title>MI Grids visualisation</title>
+
+	<link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+	<div class='container'>
+		<h1>Mutable Instruments Grids <small>Drum Fill visualisation</small></h1>
+
+		<h2>Visualizer</h2>
+		<svg width="960" height="90"></svg>
+		<p>
+			Coordinates: (<span id="coordinates">0:0,0:0</span>)</br>
+			<label for='x'>X:</label>
+			<input class='range cv' type="range" min="0" max="255" id='x' value='0' data-key="3" />
+			<span class="value" id="value-3">0</span><br />
+
+			<label for='y'>Y:</label>
+			<input class='range cv' type="range" min="0" max="255" id='y' value='0' data-key="4" />
+			<span class="value" id="value-4">0</span><br />
+
+			<label for='cv1'>Fill 1:</label>
+			<input class='range cv' type="range" min="0" max="255" id='cv1' value='0' data-key="0" />
+			<span class="value" id="value-0">0</span><br />
+
+			<label for='cv2'>Fill 2:</label>
+			<input class='range cv' type="range" min="0" max="255" id='cv2' value='0' data-key="1" />
+			<span class="value" id="value-1">0</span><br />
+
+			<label for='cv3'>Fill 3:</label>
+			<input class='range cv' type="range" min="0" max="255" id='cv3' value='0' data-key="2" />
+			<span class="value" id="value-2">0</span><br />
+
+			<button id='run'>Run?</button>
+			<input class='range' type='range' min="60" max="200" id="bpm" value="120" />
+			<span class="value" id="value-bpm">120</span><br />
+		</p>
+		<p><a href="#" id="permalink">Permalink</a></p>
+
+		<hr>
+
+		<h2>Original article</h2>
+		<p>While researching the modules I have on order for my first Eurorack
+			system I was looking for examples of people who had played with the Grids
+			firmware, specifically I was looking for anyone who'd changed the drum loop
+			tables. There were a few people asking about it on the muffwiggler forums
+			but no examples of people having done it. The other thing that popped up a
+			few times were people asking about some way of visualising the stock
+			firmware from pichenettes and again, no examples of people having done it.
+			Since, at the time of writing this, I don't have my rails or powersupply (or
+			even my Grids), and I have some experience reading microcontroller firmware
+			(though any C is likely to be enough for this project) and some experience
+			writing visualisations in Javascript - I figured I'd give writing a
+			visualisation a try.</p>
+		<p>This tool aims to be a true representation of how the X/Y and 3 Fill CV
+			on a Muteable Instruments Grids effect the Trig and Acc outputs over the 32
+			steps. It uses <a href="https://d3js.org">D3js</a>, HTML5's range input
+			control and is derived from the <a href="https://github.com/pichenettes/eurorack/tree/master/grids">Grids
+				firmware source code</a>. I believe it to be a true translation of
+			everything except the chaos control and euclidean mode, but I don't yet have
+			my Grids to actually test it against. Feel free to point out bugs. :)</p>
+		<p>The X and Y controls interpolate the threshold levels between the 5x5
+			matrix of 32 by 3 track drum loops using the same 4 way mixing and look up
+			tables from the original firmware. pichenettes explains the theory of how
+			this works in the thread <a
+				href="https://mutable-instruments.net/forum/discussion/3863/understanding-code-grids-u8mix-and-bitshift-in-pattern_generator-cc">Understanding
+				code Grids: U8Mix and bitshift in pattern_generator.cc</a>¹ over on the MI
+			forums. The interpolated thresholds are displayed as coloured squares for
+			each step & track; the higher the threshold the more blue the square is.
+			Higher valued steps get introduced first as you raise the fill control for
+			that track. If the threshold is high enough (the cutoff is a value of 192),
+			any time it fires on the trigger output it will also fire on the accent
+			output. Watch the borders of the squares as you raise the fill controls for
+			the different tracks, when a trig would be generated on that step and track
+			the stroke turns black and when an acc would be generated that step and
+			track's stroke is 2px thicker than a non acc generating step.</p>
+		<h2>Update!</h2>
+		<p>It took less than a day for someone (drinkcorpsevomit) on the forum to
+			request I add sound and I'll be honest, it had definitely crossed my mind.
+			Props to them for the prompt and for pointing me to <a href="https://github.com/goldfire/howler.js">howler.js</a>
+			which made it
+			super easy. The interface is a bit rough <strike>and I'm not sure I have the BPM to
+				timeout duration right</strike>(this version taps out correctly now), but it
+			definitely plays very 808 drums when you press the [run?] button.</p>
+
+		<hr>
+
+		<h2>Matthew's notes</h2>
+		<h3>¹ U8Mix and bitshift in pattern_generator</h3>
+		<p>The original MI forum is dead, but I was able to find this thread on the <a
+				href="https://web.archive.org/web/20160313031632/https://mutable-instruments.net/forum/discussion/3863/understanding-code-grids-u8mix-and-bitshift-in-pattern_generator-cc">Internet
+				Archive's Wayback Machine.</a> I'll copy it here just to mirror it.</p>
+		<div class="quote quote-gphg">
+			<b>gphg</b><br><br>
+			I'm trying to understand the code of Grids (especially the drum-pattern-generator).<br>
+			line 94 in pattern_generator.cc:<br>
+			return U8Mix(U8Mix(a, b, x &lt;&lt; 2), U8Mix(c, d, x &lt;&lt; 2), y &lt;&lt; 2);<br><br>
+
+			First up: U8Mix<br>
+			As I understand it U8Mix returns a weighted sum:<br>
+			the input numbers are all 8bit unsigned<br>
+			the computation inside U8Mix is b*x + a*(255-x)<br>
+			this sum is (to my understanding) 16bit<br>
+			but the return of U8Mix is only 8bit unsigned<br>
+			could someone explain? or point out where my reasoning is false?<br>
+			preferrably with an example of meaningfull / relevant numbers<br><br>
+
+			Second: the bitshift in ReadDrumMap: U8Mix(a, b, x &lt;&lt; 2)<br>
+			Why the bitshift?<br><br>
+
+			Thank you very much.<br>
+		</div>
+
+		<div class="quote quote-pichenettes">
+			<b>pichenettes</b><br><br>
+
+			U8Mix returns x * b + (255 - x) * a >> 8 (it 'crossfades' between a and b where x sets the position of the
+			crossfader, with a slight loss of 255/256.0). It internally calculates the 16-bit result as you've noticed but
+			drops the lowest byte.<br><br>
+
+			The drum map is 5 x 5 - which means that that each axis is divided into 4 zones. If a coordinate (say x) has a
+			range of 8-bit, x >> 6 will give you the zone index ; and x &lt;&lt; 2 will give you the relative position within
+			the
+			zone.<br>
+		</div>
+
+		<div class="quote quote-gphg">
+			<b>gphg</b><br><br>
+			Thank you very much,<br>
+			I'm beginning to understand I need to learn working with bits<br><br>
+
+			Now I feel confident in upgrading my MIdrum from Anushri-mode to Grids-mode<br><br>
+
+			Much appreciated!<br>
+		</div>
+
+		<div class="quote quote-toneburst">
+			<b>toneburst</b><br><br>
+
+			Apologies for dredging up this long-dead thread.<br><br>
+
+			I've need trying to prototype a variation of Grids using JavaScript (I know; not ideal, but it's the language I
+			know best).<br><br>
+
+			Your explanation above has been really useful, pichenettes. I've not really used bit-shift operators before (no
+			formal background in computer science here, but been writing code for years), so I've learnt a lot.<br>
+		</div>
+
+		<div class="quote quote-toneburst">
+			<b>toneburst</b><br><br>
+
+			@pichenettes Am I right in thinking that your U8Mix function never quite reaches 'b' value? I did a simple JS
+			test, using the function to crossfade between values of 0 and 255, and the output only reached 254, with x at 255.
+			Is this expected behaviour?<br><br>
+
+			I was hoping to use the same mix function to fade between values in the 0-11 range, but again, the output of the
+			mix function only gets to 10.<br><br>
+
+			Is there some variation of the mix function that will return exactly the target value at x=255?<br><br>
+
+			I'd normally do this using floating-point numbers, but I'm hoping eventually to have this code running on an
+			ATmega328, so I thought it might be best to use an integer-only version.<br><br>
+
+			Happy New Year, incidentally! May 2016 bring you health, happiness, prosperity (and many brilliant ideas which we
+			all look forward to seeing transformed into Euro goodness).<br>
+		</div>
+
+		<div class="quote quote-pichenettes">
+			<b>pichenettes</b><br><br>
+
+			&gt; Am I right in thinking that your U8Mix function never quite reaches 'b' value?<br><br>
+
+			Yes. That's the expected behaviour because reaching b would require the crossfade parameter to be at 256 (that is
+			to say 1.0 using an 8-bit fractional part).<br><br>
+
+			If you want 255 to mean “100% b, 0% a”, you need to divide by 255 instead of shifting by 8, and what took 1 CPU
+			cycle will suddenly take 40+<br>
+		</div>
+
+		<div class="quote quote-toneburst">
+			<b>toneburst</b><br><br>
+
+			Thanks for getting back to me. Thinking about it, it's not necessarily a problem, since when we're inside the next
+			cell, and x=0, b will become a, and we'll get the original value.<br><br>
+
+			I may make a lookup table, to create little plateaus in x around each node.<br>
+		</div>
+
+		<div class="quote quote-toneburst">
+			<b>toneburst</b><br><br>
+
+			Or this:<br><br>
+
+			function U8Mix(a, b, x) { return (x == 255) ? b : x * b + (255 – x) * a >> 8; }<br><br>
+
+			also works.<br>
+		</div>
+	</div>
+
+	<script src="/lib/d3.v4.min.js"></script>
+	<script src="/lib/howler.min.js"></script>
+	<script src="grids_resources.js"></script>
+	<script src="main.js"></script>
+</body>
