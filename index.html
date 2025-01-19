@@ -38,7 +38,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				href="https://github.com/handeyeco/mi-grids-viz">source</a>).</p>
 
 		<h2>Visualizer</h2>
-		<svg id="pattern-viz" width="960" height="90"></svg>
+		<svg id="pattern-viz" width="960" height="90"></svg><br>
+
+		<button class="run-button" id='run'>Run</button>
+
 		<div class="control-table-columns">
 			<div>
 				Coordinates: (<span id="coordinates">0:0,0:0</span>)</br>
@@ -65,11 +68,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				<label for='bpm'>BPM:</label>
 				<input class='range' type='range' min="60" max="200" id="bpm" value="120" />
 				<span class="value" id="value-bpm">120</span><br />
-
-				<button class="run-button" id='run'>Run</button>
 			</div>
 			<div>
 				<table class="data-table">
+					Map data<br>
 					<thead>
 						<tr>
 							<th scope="col">Source</th>
@@ -112,6 +114,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				</table>
 			</div>
 			<div>
+				Map visualizer<br>
 				<canvas id="map-viz"></canvas>
 			</div>
 		</div>

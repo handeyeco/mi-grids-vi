@@ -80,7 +80,7 @@ function fill(d, i) {
 
 function update() {
   d3.select("#coordinates").text(
-    xpage + ":" + xbalance + "," + ypage + ":" + ybalance
+    `x: ${xpage}, ${xbalance} y: ${ypage}, ${ybalance}`
   );
 
   svg.selectAll(".cell").data(mixed);
