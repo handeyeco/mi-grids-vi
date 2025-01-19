@@ -26,7 +26,7 @@ let color;
  * - 3: X
  * - 4: Y
  */
-let cv = [50, 50, 50, 0, 0];
+let cv = [50, 50, 50, 50, 50];
 
 function U8Mix(a, b, x) {
   return (x * b + (0xff - x) * a) >> 8;
