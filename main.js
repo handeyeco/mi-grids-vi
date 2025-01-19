@@ -69,7 +69,7 @@ if ((incv = searchParams.get("cv"))) {
 // D3 / VIZ DRAWING
 // ================
 
-svg = d3.select("svg");
+svg = d3.select("#pattern-viz");
 color = d3.scaleLinear().domain([0, 0xff]).range(["white", "blue"]);
 
 function fill(d, i) {
@@ -140,6 +140,54 @@ svg
   .attr("ry", 5)
   .style("fill", fill);
 
+function map(n, start1, stop1, start2, stop2) {
+  return (n - start1) / (stop1 - start1) * (stop2 - start2) + start2;
+}
+
+function drawMapViz() {
+  const ratio = window.devicePixelRatio || 1
+  const squareDim = 200;
+
+  const canvas = document.getElementById("map-viz");
+  canvas.width = squareDim * ratio
+  canvas.height = squareDim * ratio
+  canvas.style.width = squareDim + 'px'
+  canvas.style.height = squareDim + 'px'
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(ratio, ratio)
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const divisions = 4;
+  const rectDim = squareDim / divisions;
+  ctx.strokeStyle = "lightgrey";
+  ctx.fillStyle = "blue";
+  for (let y = 0; y < 5; y++) {
+    for (let x = 0; x < 5; x++) {
+      const xOff = x * rectDim;
+      const yOff = y * rectDim;
+
+      if (xpage === x && ypage === y) {
+        ctx.globalAlpha = 0.2;
+        ctx.fillRect(xOff, yOff, rectDim, rectDim)
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.strokeRect(xOff, yOff, rectDim, rectDim)
+    }
+  }
+
+  ctx.fillStyle = "blue";
+  ctx.strokeStyle = "black";
+  ctx.beginPath();
+  ctx.arc(
+    xpage * rectDim + map(xbalance, 0, 255, 0, rectDim),
+    ypage * rectDim + map(ybalance, 0, 255, 0, rectDim),
+    4, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.stroke();
+}
+
 // ====================
 // INTERACTION HANDLERS
 // ====================
@@ -151,6 +199,7 @@ d3.selectAll(".cv").on("input", function () {
   calculateMixed();
   update();
   updateTable();
+  drawMapViz();
 });
 
 d3.select("#run").on("click", function () {
@@ -189,13 +238,13 @@ function init() {
   calculateMixed()
   update();
   updateTable();
+  drawMapViz();
 
   // make sure sliders match inital state
   // when loading
   d3.selectAll(".cv").each(function () {
     const input = d3.select(this);
     const key = +input.attr("data-key");
-    console.log({input, key, value: cv[key]})
     input.property("value", cv[key]);
   });
 }
