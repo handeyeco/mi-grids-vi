@@ -246,6 +246,7 @@ function init() {
     const input = d3.select(this);
     const key = +input.attr("data-key");
     input.property("value", cv[key]);
+    d3.select("#value-" + key).text(cv[key]);
   });
 }
 
