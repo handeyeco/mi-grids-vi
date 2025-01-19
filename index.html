@@ -39,32 +39,79 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 		<h2>Visualizer</h2>
 		<svg width="960" height="90"></svg>
-		<p>
-			Coordinates: (<span id="coordinates">0:0,0:0</span>)</br>
-			<label for='x'>X:</label>
-			<input class='range cv' type="range" min="0" max="255" id='x' value='0' data-key="3" />
-			<span class="value" id="value-3">0</span><br />
+		<div class="control-table-columns">
+			<div>
+				Coordinates: (<span id="coordinates">0:0,0:0</span>)</br>
+				<label for='x'>X:</label>
+				<input class='range cv' type="range" min="0" max="255" id='x' value='0' data-key="3" />
+				<span class="value" id="value-3">0</span><br />
 
-			<label for='y'>Y:</label>
-			<input class='range cv' type="range" min="0" max="255" id='y' value='0' data-key="4" />
-			<span class="value" id="value-4">0</span><br />
+				<label for='y'>Y:</label>
+				<input class='range cv' type="range" min="0" max="255" id='y' value='0' data-key="4" />
+				<span class="value" id="value-4">0</span><br />
 
-			<label for='cv1'>Fill 1:</label>
-			<input class='range cv' type="range" min="0" max="255" id='cv1' value='0' data-key="0" />
-			<span class="value" id="value-0">0</span><br />
+				<label for='cv1'>Fill 1:</label>
+				<input class='range cv' type="range" min="0" max="255" id='cv1' value='0' data-key="0" />
+				<span class="value" id="value-0">0</span><br />
 
-			<label for='cv2'>Fill 2:</label>
-			<input class='range cv' type="range" min="0" max="255" id='cv2' value='0' data-key="1" />
-			<span class="value" id="value-1">0</span><br />
+				<label for='cv2'>Fill 2:</label>
+				<input class='range cv' type="range" min="0" max="255" id='cv2' value='0' data-key="1" />
+				<span class="value" id="value-1">0</span><br />
 
-			<label for='cv3'>Fill 3:</label>
-			<input class='range cv' type="range" min="0" max="255" id='cv3' value='0' data-key="2" />
-			<span class="value" id="value-2">0</span><br />
+				<label for='cv3'>Fill 3:</label>
+				<input class='range cv' type="range" min="0" max="255" id='cv3' value='0' data-key="2" />
+				<span class="value" id="value-2">0</span><br />
 
-			<button id='run'>Run?</button>
-			<input class='range' type='range' min="60" max="200" id="bpm" value="120" />
-			<span class="value" id="value-bpm">120</span><br />
-		</p>
+				<label for='bpm'>BPM:</label>
+				<input class='range' type='range' min="60" max="200" id="bpm" value="120" />
+				<span class="value" id="value-bpm">120</span><br />
+
+				<button class="run-button" id='run'>Run</button>
+			</div>
+			<div>
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th scope="col">Source</th>
+							<th scope="col">Binary</th>
+							<th scope="col">Decimal</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="row">x</th>
+							<td id="x-binary">01010101</td>
+							<td id="x-decimal">85</td>
+						</tr>
+						<tr>
+							<th scope="row">xbalance</th>
+							<td id="xbalance-binary"></td>
+							<td id="xbalance-decimal"></td>
+						</tr>
+						<tr>
+							<th scope="row">xpage</th>
+							<td id="xpage-binary"></td>
+							<td id="xpage-decimal"></td>
+						</tr>
+						<tr>
+							<th scope="row">y</th>
+							<td id="y-binary"></td>
+							<td id="y-decimal"></td>
+						</tr>
+						<tr>
+							<th scope="row">ybalance</th>
+							<td id="ybalance-binary"></td>
+							<td id="ybalance-decimal"></td>
+						</tr>
+						<tr>
+							<th scope="row">ypage</th>
+							<td id="ypage-binary"></td>
+							<td id="ypage-decimal"></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
 		<p><a href="#" id="permalink">Permalink</a></p>
 
 		<hr>

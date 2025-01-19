@@ -2,11 +2,21 @@
 // MAIN GRIDS CODE
 // ===============
 
-// global state
+// settings state
 let mixed;
+let xpage;
+let xbalance;
+let ypage;
+let ybalance;
+
+// sequencer state
 let step = 0;
 let run = false;
 let bpm = 120;
+
+// D3 globals
+let svg;
+let color;
 
 /**
  * Collection of state
@@ -16,17 +26,17 @@ let bpm = 120;
  * - 3: X
  * - 4: Y
  */
-let cv = [0, 0, 0, 0, 0];
+let cv = [50, 50, 50, 0, 0];
 
 function U8Mix(a, b, x) {
   return (x * b + (0xff - x) * a) >> 8;
 }
 
 function calculateMixed() {
-  const xpage = cv[3] >> 6;
-  const xbalance = (cv[3] << 2) & 0xff;
-  const ypage = cv[4] >> 6;
-  const ybalance = (cv[4] << 2) & 0xff;
+  xpage = cv[3] >> 6;
+  xbalance = (cv[3] << 2) & 0xff;
+  ypage = cv[4] >> 6;
+  ybalance = (cv[4] << 2) & 0xff;
 
   mixed = [];
   for (i = 0; i < 96; i++) {
@@ -36,8 +46,6 @@ function calculateMixed() {
     const d = drum_map[(xpage + 1) * 5 + ypage + 1][i];
     mixed[i] = U8Mix(U8Mix(a, b, xbalance), U8Mix(c, d, xbalance), ybalance);
   }
-
-  return { xpage, xbalance, ypage, ybalance };
 }
 
 // ==================
@@ -61,8 +69,8 @@ if ((incv = searchParams.get("cv"))) {
 // D3 / VIZ DRAWING
 // ================
 
-const svg = d3.select("svg");
-const color = d3.scaleLinear().domain([0, 0xff]).range(["white", "blue"]);
+svg = d3.select("svg");
+color = d3.scaleLinear().domain([0, 0xff]).range(["white", "blue"]);
 
 function fill(d, i) {
   return run && step == i % 32 && d > (0xff ^ cv[Math.floor(i / 32)])
@@ -71,8 +79,6 @@ function fill(d, i) {
 }
 
 function update() {
-  const { xpage, xbalance, ypage, ybalance } = calculateMixed();
-
   d3.select("#coordinates").text(
     xpage + ":" + xbalance + "," + ypage + ":" + ybalance
   );
@@ -95,6 +101,26 @@ function update() {
   d3.select("#permalink").attr("href", permalink);
 }
 
+function updateTable() {
+  d3.select("#x-binary").text(cv[3].toString(2).padStart(8, '0'));
+  d3.select("#x-decimal").text(cv[3]);
+
+  d3.select("#y-binary").text(cv[4].toString(2).padStart(8, '0'));
+  d3.select("#y-decimal").text(cv[4]);
+
+  d3.select("#xpage-binary").text(xpage.toString(2).padStart(8, '0'));
+  d3.select("#xpage-decimal").text(xpage);
+
+  d3.select("#xbalance-binary").text(xbalance.toString(2).padStart(8, '0'));
+  d3.select("#xbalance-decimal").text(xbalance);
+
+  d3.select("#ypage-binary").text(ypage.toString(2).padStart(8, '0'));
+  d3.select("#ypage-decimal").text(ypage);
+
+  d3.select("#ybalance-binary").text(ybalance.toString(2).padStart(8, '0'));
+  d3.select("#ybalance-decimal").text(ybalance);
+}
+
 svg
   .append("g")
   .attr("transform", "translate(10,30)")
@@ -114,8 +140,6 @@ svg
   .attr("ry", 5)
   .style("fill", fill);
 
-update();
-
 // ====================
 // INTERACTION HANDLERS
 // ====================
@@ -124,14 +148,18 @@ d3.selectAll(".cv").on("input", function () {
   key = +d3.select(this).attr("data-key");
   cv[key] = +this.value;
   d3.select("#value-" + key).text(this.value);
+  calculateMixed();
   update();
+  updateTable();
 });
 
 d3.select("#run").on("click", function () {
   run = !run;
+  d3.select(this).text(run ? "Stop" : "Run")
   step = 0;
   tick();
 });
+
 d3.select("#bpm").on("input", function () {
   bpm = +this.value;
   d3.select("#value-bpm").text(this.value);
@@ -152,6 +180,27 @@ const sound = new Howl({
     HHA: [7000, 500],
   },
 });
+
+// ==========
+// INITIALIZE
+// ==========
+
+function init() {
+  calculateMixed()
+  update();
+  updateTable();
+
+  // make sure sliders match inital state
+  // when loading
+  d3.selectAll(".cv").each(function () {
+    const input = d3.select(this);
+    const key = +input.attr("data-key");
+    console.log({input, key, value: cv[key]})
+    input.property("value", cv[key]);
+  });
+}
+
+init();
 
 // ===========
 // UPDATE LOOP
